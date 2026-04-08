@@ -54,5 +54,11 @@ services:
       - wp_content:/var/www/html/wp-content
       - ./scripts:/scripts:ro
 
+  test:
+    image: alpine
+    command: ["sh", "-c", "ls -la /scripts && sleep 1000"]
+    volumes:
+      - ./scripts:/scripts
+
 volumes:
   wp_content:

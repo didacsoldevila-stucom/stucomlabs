@@ -18,7 +18,7 @@ if wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
 fi
 
 echo "== Instalando WordPress =="
-TEMP_ADMIN_PASSWORD="$(openssl rand -base64 18 | tr -d '\n')"
+TEMP_ADMIN_PASSWORD="$(head /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 24)"
 
 wp core install \
   --url="https://${DOMAIN}" \
