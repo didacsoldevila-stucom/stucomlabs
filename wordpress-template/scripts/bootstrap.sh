@@ -40,7 +40,7 @@ echo "== Instalando Elementor Pro =="
 # wp plugin install /plugins/elementor-pro.zip --activate --path=/var/www/html
 
 echo "== Activando licencia de Elementor Pro =="
-wp elementor-pro license activate "${ELEMENTOR_PRO_LICENSE}" --path=/var/www/html
+# wp elementor-pro license activate "${ELEMENTOR_PRO_LICENSE}" --path=/var/www/html
 
 echo "== Creando usuario alumno =="
 wp user create "${STUDENT_CODE}" "${STUDENT_EMAIL}" \

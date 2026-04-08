@@ -14,6 +14,8 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '256M');
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
 
     volumes:
       - wp_content:/var/www/html/wp-content
@@ -47,6 +49,7 @@ services:
       SUPPORT_USER: ${SUPPORT_USER}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL}
       SUPPORT_PASSWORD: ${SUPPORT_PASSWORD}
+      ELEMENTOR_PRO_LICENSE: ${ELEMENTOR_PRO_LICENSE}
     volumes:
       - wp_content:/var/www/html/wp-content
       - ./scripts:/scripts:ro
