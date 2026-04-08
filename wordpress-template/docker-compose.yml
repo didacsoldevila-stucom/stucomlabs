@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
 
     environment:
-      WORDPRESS_DB_HOST: mariadb:3306
+      WORDPRESS_DB_HOST: hhn3uutz808uegel3kjkhk61:3306
       WORDPRESS_DB_NAME: template_db
       WORDPRESS_DB_USER: template_user
       WORDPRESS_DB_PASSWORD: template_pass
@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
 
     environment:
-      WORDPRESS_DB_HOST: mariadb:3306
+      WORDPRESS_DB_HOST: hhn3uutz808uegel3kjkhk61:3306
       WORDPRESS_DB_NAME: template_db
       WORDPRESS_DB_USER: template_user
       WORDPRESS_DB_PASSWORD: template_pass
