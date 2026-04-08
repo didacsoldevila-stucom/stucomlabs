@@ -7,10 +7,10 @@ services:
     restart: unless-stopped
 
     environment:
-      WORDPRESS_DB_HOST: hhn3uutz808uegel3kjkhk61:3306
-      WORDPRESS_DB_NAME: template_db
-      WORDPRESS_DB_USER: template_user
-      WORDPRESS_DB_PASSWORD: template_pass
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '256M');
@@ -20,10 +20,10 @@ services:
 
     labels:
       - traefik.enable=true
-      - traefik.http.routers.wp-template.rule=Host(`template.stucomlabs.com`)
-      - traefik.http.routers.wp-template.entrypoints=websecure
-      - traefik.http.routers.wp-template.tls=true
-      - traefik.http.services.wp-template.loadbalancer.server.port=80
+      - traefik.http.routers.${SERVICE_NAME}.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.${SERVICE_NAME}.entrypoints=websecure
+      - traefik.http.routers.${SERVICE_NAME}.tls=true
+      - traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=80
 
   wpcli:
     image: wordpress:cli
@@ -33,10 +33,10 @@ services:
     restart: unless-stopped
 
     environment:
-      WORDPRESS_DB_HOST: hhn3uutz808uegel3kjkhk61:3306
-      WORDPRESS_DB_NAME: template_db
-      WORDPRESS_DB_USER: template_user
-      WORDPRESS_DB_PASSWORD: template_pass
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
       HOME: /tmp
 
     volumes:
