@@ -18,7 +18,7 @@ services:
       SMTP_PASS: ${SMTP_PASS}
 
     volumes:
-      - wp_content:/var/www/html/wp-content
+      - wp_html:/var/www/html
 
     labels:
       - traefik.enable=true
@@ -54,7 +54,7 @@ services:
       SUPPORT_PASSWORD: ${SUPPORT_PASSWORD}
       ELEMENTOR_PRO_LICENSE: ${ELEMENTOR_PRO_LICENSE}
     volumes:
-      - wp_content:/var/www/html/wp-content
+      - wp_html:/var/www/html
 
 volumes:
-  wp_content:
+  wp_html:

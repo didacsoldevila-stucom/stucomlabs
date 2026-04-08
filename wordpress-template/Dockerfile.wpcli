@@ -3,11 +3,11 @@ FROM wordpress:cli
 USER root
 
 COPY scripts/bootstrap.sh /scripts/bootstrap.sh
+COPY mu-plugins/smtp.php /tmp/smtp.php
 # COPY plugins/elementor-pro.zip /plugins/elementor-pro.zip
 
 RUN chmod +x /scripts/bootstrap.sh \
-    && mkdir -p /plugins \
-    && chown -R 33:33 /scripts /plugins
+    && chown 33:33 /scripts/bootstrap.sh /tmp/smtp.php
 
 USER 33:33
 WORKDIR /var/www/html

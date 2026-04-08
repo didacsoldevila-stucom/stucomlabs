@@ -20,6 +20,9 @@ fi
 echo "== Instalando WordPress =="
 TEMP_ADMIN_PASSWORD="$(head /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 24)"
 
+mkdir -p /var/www/html/wp-content/mu-plugins
+cp /tmp/smtp.php /var/www/html/wp-content/mu-plugins/smtp.php
+
 wp core install \
   --url="https://${DOMAIN}" \
   --title="${WP_TITLE}" \
