@@ -21,10 +21,25 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 fi
 
 echo "== Ajustando wp-config.php =="
-wp config set FS_METHOD direct --type=constant --raw --path=/var/www/html || true
+wp config set FS_METHOD direct --type=constant --path=/var/www/html || true
 
 echo "== Esperando a base de datos =="
-until wp db check --path=/var/www/html >/dev/null 2>&1; do
+until php -r '
+$host = getenv("WORDPRESS_DB_HOST");
+$user = getenv("WORDPRESS_DB_USER");
+$pass = getenv("WORDPRESS_DB_PASSWORD");
+$db   = getenv("WORDPRESS_DB_NAME");
+
+mysqli_report(MYSQLI_REPORT_OFF);
+$mysqli = @new mysqli($host, $user, $pass, $db);
+
+if ($mysqli->connect_errno) {
+    exit(1);
+}
+
+$mysqli->close();
+exit(0);
+' >/dev/null 2>&1; do
   sleep 3
 done
 
