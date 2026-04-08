@@ -6,8 +6,16 @@ until [ -f /var/www/html/wp-load.php ] || [ -f /var/www/html/wp-config-sample.ph
   sleep 2
 done
 
+mkdir -p /var/www/html/wp-content/mu-plugins
+cp /tmp/smtp.php /var/www/html/wp-content/mu-plugins/smtp.php
+
 echo "== Esperando a base de datos =="
-until wp db check --path=/var/www/html >/dev/null 2>&1; do
+until wp db check \
+  --dbhost="${WORDPRESS_DB_HOST}" \
+  --dbname="${WORDPRESS_DB_NAME}" \
+  --dbuser="${WORDPRESS_DB_USER}" \
+  --dbpass="${WORDPRESS_DB_PASSWORD}" \
+  --path=/var/www/html >/dev/null 2>&1; do
   sleep 3
 done
 
