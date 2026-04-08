@@ -28,7 +28,10 @@ services:
       - traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=80
 
   wpcli:
-    image: wordpress:cli
+    build:
+      context: .
+      dockerfile: Dockerfile.wpcli
+
     user: "33:33"
     working_dir: /var/www/html
     command: ["sh", "-c", "sleep infinity"]
@@ -52,13 +55,6 @@ services:
       ELEMENTOR_PRO_LICENSE: ${ELEMENTOR_PRO_LICENSE}
     volumes:
       - wp_content:/var/www/html/wp-content
-      - ./scripts:/scripts:ro
-
-  test:
-    image: alpine
-    command: ["sh", "-c", "ls -la /scripts && sleep 1000"]
-    volumes:
-      - ./scripts:/scripts
 
 volumes:
   wp_content:

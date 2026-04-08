@@ -1,0 +1,13 @@
+FROM wordpress:cli
+
+USER root
+
+COPY scripts/bootstrap.sh /scripts/bootstrap.sh
+# COPY plugins/elementor-pro.zip /plugins/elementor-pro.zip
+
+RUN chmod +x /scripts/bootstrap.sh \
+    && mkdir -p /plugins \
+    && chown -R 33:33 /scripts /plugins
+
+USER 33:33
+WORKDIR /var/www/html
