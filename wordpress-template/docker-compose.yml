@@ -1,0 +1,46 @@
+services:
+  wordpress:
+    image: wordpress:php8.3-apache
+    restart: unless-stopped
+
+    environment:
+      WORDPRESS_DB_HOST: mariadb:3306
+      WORDPRESS_DB_NAME: template_db
+      WORDPRESS_DB_USER: template_user
+      WORDPRESS_DB_PASSWORD: template_pass
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_MEMORY_LIMIT', '256M');
+        define('WP_MAX_MEMORY_LIMIT', '256M');
+
+    volumes:
+      - wp_content:/var/www/html/wp-content
+      - ./php/99-custom.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wp-template.rule=Host(`template.stucomlabs.com`)
+      - traefik.http.routers.wp-template.entrypoints=websecure
+      - traefik.http.routers.wp-template.tls=true
+      - traefik.http.services.wp-template.loadbalancer.server.port=80
+
+  wpcli:
+    image: wordpress:cli
+    user: "33:33"
+    working_dir: /var/www/html
+    command: ["sh", "-c", "sleep infinity"]
+    restart: unless-stopped
+
+    environment:
+      WORDPRESS_DB_HOST: mariadb:3306
+      WORDPRESS_DB_NAME: template_db
+      WORDPRESS_DB_USER: template_user
+      WORDPRESS_DB_PASSWORD: template_pass
+      HOME: /tmp
+
+    volumes:
+      - wp_content:/var/www/html/wp-content
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+
+volumes:
+  wp_content:
