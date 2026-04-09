@@ -23,10 +23,29 @@ services:
 
     labels:
       - traefik.enable=true
+      # Router principal (normal)
       - traefik.http.routers.${SERVICE_NAME}.rule=Host(`${DOMAIN}`)
       - traefik.http.routers.${SERVICE_NAME}.entrypoints=websecure
       - traefik.http.routers.${SERVICE_NAME}.tls=true
+      - traefik.http.routers.${SERVICE_NAME}.service=${SERVICE_NAME}
       - traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=80
+      # Router SOLO para wp-login
+      - traefik.http.routers.${SERVICE_NAME}-login.rule=Host(`${DOMAIN}`) && Path(`/wp-login.php`)
+      - traefik.http.routers.${SERVICE_NAME}-login.entrypoints=websecure
+      - traefik.http.routers.${SERVICE_NAME}-login.tls=true
+      - traefik.http.routers.${SERVICE_NAME}-login.priority=100
+      - traefik.http.routers.${SERVICE_NAME}-login.service=${SERVICE_NAME}
+      - traefik.http.routers.${SERVICE_NAME}-login.middlewares=${SERVICE_NAME}-login-ratelimit
+      # Rate limit DURO solo para login
+      - traefik.http.middlewares.${SERVICE_NAME}-login-ratelimit.ratelimit.average=3
+      - traefik.http.middlewares.${SERVICE_NAME}-login-ratelimit.ratelimit.burst=5
+      # Bloqueo XML-RPC
+      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.rule=Host(`${DOMAIN}`) && Path(`/xmlrpc.php`)
+      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.entrypoints=websecure
+      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.tls=true
+      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.priority=100
+      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.middlewares=${SERVICE_NAME}-xmlrpc-deny
+      - traefik.http.middlewares.${SERVICE_NAME}-xmlrpc-deny.errors.status=403
 
   wpcli:
     build:

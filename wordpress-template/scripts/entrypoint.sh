@@ -34,4 +34,15 @@ if [ -f /usr/src/stucom/mu-plugins/smtp.php ]; then
   chmod 0644 /var/www/html/wp-content/mu-plugins/smtp.php
 fi
 
+mkdir -p /var/www/html/wp-content/uploads
+
+cat <<EOF > /var/www/html/wp-content/uploads/.htaccess
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+EOF
+
+chown www-data:www-data /var/www/html/wp-content/uploads/.htaccess
+chmod 644 /var/www/html/wp-content/uploads/.htaccess
+
 exec docker-entrypoint.sh apache2-foreground

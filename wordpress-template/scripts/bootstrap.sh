@@ -102,6 +102,9 @@ wp site switch-language ca --path=/var/www/html || true
 log "== Ajustando indexación =="
 wp option update blog_public 0 --path=/var/www/html
 
+log "== Configurando timezone =="
+wp option update timezone_string "Europe/Madrid" --path=/var/www/html
+
 log "== Instalando Elementor free =="
 wp plugin install elementor --activate --path=/var/www/html
 
