@@ -19,6 +19,9 @@ write_secret DB_PASSWORD /run/secrets/db_password
 write_secret SMTP_USER /run/secrets/smtp_user
 write_secret SMTP_PASS /run/secrets/smtp_pass
 
+# Muy importante: hacer que la imagen oficial de WordPress use el fichero secreto
+export WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
+
 unset DB_PASSWORD
 unset SMTP_USER
 unset SMTP_PASS
