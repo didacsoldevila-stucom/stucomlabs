@@ -1,16 +1,43 @@
 <?php
+/**
+ * Plugin Name: STUCOM SMTP
+ * Description: Configuración SMTP para labs usando secretos convertidos a fichero.
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+function stucom_read_secret($path) {
+    if (!is_readable($path)) {
+        error_log("STUCOM SMTP: no se puede leer el secreto {$path}");
+        return null;
+    }
+
+    $value = trim((string) file_get_contents($path));
+    return $value !== '' ? $value : null;
+}
+
 add_action('phpmailer_init', function ($phpmailer) {
+    $smtpUser = stucom_read_secret('/run/secrets/smtp_user');
+    $smtpPass = stucom_read_secret('/run/secrets/smtp_pass');
+    $fromName = 'STUCOM Labs';
+
+    if (!$smtpUser || !$smtpPass) {
+        error_log('STUCOM SMTP: faltan smtp_user o smtp_pass');
+        return;
+    }
+
     $phpmailer->isSMTP();
     $phpmailer->Host = 'smtp.office365.com';
     $phpmailer->Port = 587;
     $phpmailer->SMTPAuth = true;
     $phpmailer->SMTPSecure = 'tls';
+    $phpmailer->Username = $smtpUser;
+    $phpmailer->Password = $smtpPass;
 
-    $phpmailer->Username = getenv('SMTP_USER');
-    $phpmailer->Password = getenv('SMTP_PASS');
-
-    $phpmailer->From = getenv('SMTP_USER');
-    $phpmailer->FromName = 'STUCOM Labs';
+    $phpmailer->From = $smtpUser;
+    $phpmailer->FromName = $fromName;
 });
 
 add_filter('retrieve_password_title', function ($title, $user_login, $user_data) {

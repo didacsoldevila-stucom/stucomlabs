@@ -19,9 +19,16 @@ write_secret DB_PASSWORD /run/secrets/db_password
 write_secret SMTP_USER /run/secrets/smtp_user
 write_secret SMTP_PASS /run/secrets/smtp_pass
 
+unset DB_PASSWORD
+unset SMTP_USER
+unset SMTP_PASS
+
 mkdir -p /var/www/html/wp-content/mu-plugins
-cp /usr/src/stucom/mu-plugins/smtp.php /var/www/html/wp-content/mu-plugins/smtp.php
-chown www-data:www-data /var/www/html/wp-content/mu-plugins/smtp.php
-chmod 0644 /var/www/html/wp-content/mu-plugins/smtp.php
+
+if [ -f /usr/src/stucom/mu-plugins/smtp.php ]; then
+  cp /usr/src/stucom/mu-plugins/smtp.php /var/www/html/wp-content/mu-plugins/smtp.php
+  chown www-data:www-data /var/www/html/wp-content/mu-plugins/smtp.php
+  chmod 0644 /var/www/html/wp-content/mu-plugins/smtp.php
+fi
 
 exec docker-entrypoint.sh apache2-foreground

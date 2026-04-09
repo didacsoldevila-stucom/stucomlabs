@@ -5,14 +5,38 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
 
+DB_PASSWORD="${DB_PASSWORD:-}"
+
+if [ -z "$DB_PASSWORD" ] && [ -f /run/secrets/db_password ]; then
+  DB_PASSWORD="$(cat /run/secrets/db_password)"
+fi
+
+if [ -z "$DB_PASSWORD" ]; then
+  log "ERROR: No se ha proporcionado DB_PASSWORD"
+  exit 1
+fi
+
+export WORDPRESS_DB_PASSWORD="$DB_PASSWORD"
+
 log "== Esperando a WordPress files =="
 until [ -f /var/www/html/wp-load.php ] || [ -f /var/www/html/wp-config-sample.php ]; do
   sleep 2
 done
 
-log "== Preparando MU-plugin SMTP =="
-mkdir -p /var/www/html/wp-content/mu-plugins
-cp /tmp/smtp.php /var/www/html/wp-content/mu-plugins/smtp.php
+log "== Esperando a base de datos =="
+until php -r '
+  $host = getenv("WORDPRESS_DB_HOST");
+  $user = getenv("WORDPRESS_DB_USER");
+  $pass = getenv("WORDPRESS_DB_PASSWORD");
+  $db   = getenv("WORDPRESS_DB_NAME");
+  mysqli_report(MYSQLI_REPORT_OFF);
+  $mysqli = @new mysqli($host, $user, $pass, $db);
+  if ($mysqli->connect_errno) { exit(1); }
+  $mysqli->close();
+  exit(0);
+' >/dev/null 2>&1; do
+  sleep 3
+done
 
 log "== Creando wp-config.php =="
 if [ ! -f /var/www/html/wp-config.php ]; then
@@ -26,26 +50,8 @@ fi
 
 log "== Ajustando wp-config.php =="
 wp config set FS_METHOD direct --type=constant --path=/var/www/html || true
-
-log "== Esperando a base de datos =="
-until php -r '
-$host = getenv("WORDPRESS_DB_HOST");
-$user = getenv("WORDPRESS_DB_USER");
-$pass = getenv("WORDPRESS_DB_PASSWORD");
-$db   = getenv("WORDPRESS_DB_NAME");
-
-mysqli_report(MYSQLI_REPORT_OFF);
-$mysqli = @new mysqli($host, $user, $pass, $db);
-
-if ($mysqli->connect_errno) {
-    exit(1);
-}
-
-$mysqli->close();
-exit(0);
-' >/dev/null 2>&1; do
-  sleep 3
-done
+wp config set FORCE_SSL_ADMIN true --raw --type=constant --path=/var/www/html || true
+wp config set DISALLOW_FILE_EDIT true --raw --type=constant --path=/var/www/html || true
 
 log "== Comprobando si WordPress ya está instalado =="
 if wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
@@ -53,15 +59,15 @@ if wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
   exit 0
 fi
 
-log "== Instalando WordPress =="
-TEMP_ADMIN_PASSWORD="$(head /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 24)"
+TEMP_ADMIN_PASSWORD="$(php -r 'echo bin2hex(random_bytes(16));')"
 
+log "== Instalando WordPress =="
 wp core install \
   --url="https://${DOMAIN}" \
   --title="${WP_TITLE}" \
-  --admin_user="${SUPPORT_USER}" \
-  --admin_password="${SUPPORT_PASSWORD}" \
-  --admin_email="${SUPPORT_EMAIL}" \
+  --admin_user="${STUDENT_CODE}" \
+  --admin_password="${TEMP_ADMIN_PASSWORD}" \
+  --admin_email="${STUDENT_EMAIL}" \
   --skip-email \
   --locale=ca \
   --path=/var/www/html
@@ -76,19 +82,11 @@ wp option update blog_public 0 --path=/var/www/html
 log "== Instalando Elementor free =="
 wp plugin install elementor --activate --path=/var/www/html
 
-# Descomenta estas líneas cuando ya tengas el ZIP y la licencia listos
-# log "== Instalando Elementor Pro =="
-# wp plugin install /plugins/elementor-pro.zip --activate --path=/var/www/html
-#
-# log "== Activando licencia de Elementor Pro =="
-# wp elementor-pro license activate "${ELEMENTOR_PRO_LICENSE}" --path=/var/www/html
-
-log "== Creando usuario alumno =="
-wp user create "${STUDENT_CODE}" "${STUDENT_EMAIL}" \
-  --role=administrator \
+log "== Ajustando nombre y apellidos del alumno =="
+wp user update "${STUDENT_CODE}" \
   --first_name="${STUDENT_NAME}" \
   --last_name="${STUDENT_SURNAME}" \
-  --user_pass="${TEMP_ADMIN_PASSWORD}" \
+  --role=administrator \
   --path=/var/www/html
 
 log "== Forzando reset de contraseña por email =="
