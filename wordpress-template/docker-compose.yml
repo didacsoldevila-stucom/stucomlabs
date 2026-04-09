@@ -3,9 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
     restart: unless-stopped
-
     environment:
       WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
       WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
@@ -14,6 +12,9 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '256M');
+        define('FORCE_SSL_ADMIN', true);
+        define('DISALLOW_FILE_EDIT', true);
+        define('AUTOMATIC_UPDATER_DISABLED', false);
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
 
