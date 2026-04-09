@@ -1,9 +1,6 @@
 FROM wordpress:cli
 
-COPY scripts/bootstrap.sh /scripts/bootstrap.sh
-
-RUN chmod +x /scripts/bootstrap.sh \
- && chown -R 33:33 /scripts
+COPY --chmod=755 scripts/bootstrap.sh /scripts/bootstrap.sh
 
 USER 33:33
 WORKDIR /var/www/html
