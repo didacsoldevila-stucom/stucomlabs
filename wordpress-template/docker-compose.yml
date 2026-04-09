@@ -9,6 +9,7 @@ services:
       WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
       WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
       WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_PASSWORD: ${DB_PASSWORD}
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '256M');
@@ -39,13 +40,6 @@ services:
       # Rate limit DURO solo para login
       - traefik.http.middlewares.${SERVICE_NAME}-login-ratelimit.ratelimit.average=3
       - traefik.http.middlewares.${SERVICE_NAME}-login-ratelimit.ratelimit.burst=5
-      # Bloqueo XML-RPC
-      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.rule=Host(`${DOMAIN}`) && Path(`/xmlrpc.php`)
-      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.entrypoints=websecure
-      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.tls=true
-      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.priority=100
-      - traefik.http.routers.${SERVICE_NAME}-xmlrpc.middlewares=${SERVICE_NAME}-xmlrpc-deny
-      - traefik.http.middlewares.${SERVICE_NAME}-xmlrpc-deny.errors.status=403
 
   wpcli:
     build:
