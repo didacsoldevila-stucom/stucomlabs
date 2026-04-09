@@ -1,27 +1,37 @@
 <?php
 /**
  * Plugin Name: STUCOM SMTP
- * Description: Configuración SMTP para labs usando secretos convertidos a fichero.
+ * Description: Configuración SMTP para labs usando secretos en fichero.
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-function stucom_read_secret($path) {
-    if (!is_readable($path)) {
-        error_log("STUCOM SMTP: no se puede leer el secreto {$path}");
-        return null;
+function stucom_read_secret(array $paths) {
+    foreach ($paths as $path) {
+        if (is_readable($path)) {
+            $value = trim((string) file_get_contents($path));
+            if ($value !== '') {
+                return $value;
+            }
+        }
     }
 
-    $value = trim((string) file_get_contents($path));
-    return $value !== '' ? $value : null;
+    error_log('STUCOM SMTP: no se pudo leer ningún secreto de las rutas esperadas');
+    return null;
 }
 
 add_action('phpmailer_init', function ($phpmailer) {
-    $smtpUser = stucom_read_secret('/run/secrets/smtp_user');
-    $smtpPass = stucom_read_secret('/run/secrets/smtp_pass');
-    $fromName = 'STUCOM Labs';
+    $smtpUser = stucom_read_secret([
+        '/run/secrets/smtp_user',
+        '/tmp/stucom-secrets/smtp_user',
+    ]);
+
+    $smtpPass = stucom_read_secret([
+        '/run/secrets/smtp_pass',
+        '/tmp/stucom-secrets/smtp_pass',
+    ]);
 
     if (!$smtpUser || !$smtpPass) {
         error_log('STUCOM SMTP: faltan smtp_user o smtp_pass');
@@ -37,7 +47,7 @@ add_action('phpmailer_init', function ($phpmailer) {
     $phpmailer->Password = $smtpPass;
 
     $phpmailer->From = $smtpUser;
-    $phpmailer->FromName = $fromName;
+    $phpmailer->FromName = 'STUCOM Labs';
 });
 
 add_filter('retrieve_password_title', function ($title, $user_login, $user_data) {

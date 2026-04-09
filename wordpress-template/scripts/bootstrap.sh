@@ -5,6 +5,8 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
 
+SECRETS_DIR="/tmp/stucom-secrets"
+
 write_secret() {
   var_name="$1"
   file_path="$2"
@@ -31,9 +33,9 @@ fi
 export WORDPRESS_DB_PASSWORD="$DB_PASSWORD"
 
 # Crear secretos también en wpcli para que el MU plugin SMTP funcione al enviar mails
-write_secret DB_PASSWORD /run/secrets/db_password
-write_secret SMTP_USER /run/secrets/smtp_user
-write_secret SMTP_PASS /run/secrets/smtp_pass
+write_secret DB_PASSWORD "${SECRETS_DIR}/db_password"
+write_secret SMTP_USER "${SECRETS_DIR}/smtp_user"
+write_secret SMTP_PASS "${SECRETS_DIR}/smtp_pass"
 
 log "== Esperando a WordPress files =="
 until [ -f /var/www/html/wp-load.php ] || [ -f /var/www/html/wp-config-sample.php ]; do
