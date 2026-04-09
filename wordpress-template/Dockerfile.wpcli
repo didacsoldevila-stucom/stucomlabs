@@ -3,7 +3,7 @@ FROM wordpress:cli
 COPY scripts/bootstrap.sh /scripts/bootstrap.sh
 
 RUN chmod +x /scripts/bootstrap.sh \
- && chown 33:33 /scripts/bootstrap.sh
+ && chown -R 33:33 /scripts /plugins
 
 USER 33:33
 WORKDIR /var/www/html

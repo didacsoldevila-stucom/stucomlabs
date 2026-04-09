@@ -82,6 +82,20 @@ wp option update blog_public 0 --path=/var/www/html
 log "== Instalando Elementor free =="
 wp plugin install elementor --activate --path=/var/www/html
 
+if [ -n "${ELEMENTOR_PRO_URL:-}" ]; then
+  log "== Instalando Elementor Pro desde URL =="
+  wp plugin install "${ELEMENTOR_PRO_URL}" --activate --path=/var/www/html
+else
+  log "== No se ha proporcionado ELEMENTOR_PRO_URL, se omite Elementor Pro =="
+fi
+
+if [ -n "${ELEMENTOR_PRO_LICENSE:-}" ]; then
+  log "== Activando licencia de Elementor Pro =="
+  wp elementor-pro license activate "${ELEMENTOR_PRO_LICENSE}" --path=/var/www/html
+else
+  log "== No se ha proporcionado ELEMENTOR_PRO_LICENSE, se omite activación =="
+fi
+
 log "== Ajustando nombre y apellidos del alumno =="
 wp user update "${STUDENT_CODE}" \
   --first_name="${STUDENT_NAME}" \
