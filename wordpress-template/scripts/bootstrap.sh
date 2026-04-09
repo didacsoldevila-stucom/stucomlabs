@@ -5,6 +5,18 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
 
+write_secret() {
+  var_name="$1"
+  file_path="$2"
+
+  value="$(printenv "$var_name" 2>/dev/null || true)"
+  if [ -n "$value" ]; then
+    mkdir -p "$(dirname "$file_path")"
+    printf '%s' "$value" > "$file_path"
+    chmod 600 "$file_path"
+  fi
+}
+
 DB_PASSWORD="${DB_PASSWORD:-}"
 
 if [ -z "$DB_PASSWORD" ] && [ -f /run/secrets/db_password ]; then
@@ -17,6 +29,11 @@ if [ -z "$DB_PASSWORD" ]; then
 fi
 
 export WORDPRESS_DB_PASSWORD="$DB_PASSWORD"
+
+# Crear secretos también en wpcli para que el MU plugin SMTP funcione al enviar mails
+write_secret DB_PASSWORD /run/secrets/db_password
+write_secret SMTP_USER /run/secrets/smtp_user
+write_secret SMTP_PASS /run/secrets/smtp_pass
 
 log "== Esperando a WordPress files =="
 until [ -f /var/www/html/wp-load.php ] || [ -f /var/www/html/wp-config-sample.php ]; do
