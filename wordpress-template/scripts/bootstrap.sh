@@ -21,6 +21,14 @@ write_secret() {
 
 DB_PASSWORD="${DB_PASSWORD:-}"
 
+write_secret DB_PASSWORD "${SECRETS_DIR}/db_password"
+write_secret SMTP_USER "${SECRETS_DIR}/smtp_user"
+write_secret SMTP_PASS "${SECRETS_DIR}/smtp_pass"
+
+if [ -z "$DB_PASSWORD" ] && [ -f "${SECRETS_DIR}/db_password" ]; then
+  DB_PASSWORD="$(cat "${SECRETS_DIR}/db_password")"
+fi
+
 if [ -z "$DB_PASSWORD" ] && [ -f /run/secrets/db_password ]; then
   DB_PASSWORD="$(cat /run/secrets/db_password)"
 fi
@@ -32,13 +40,8 @@ fi
 
 export WORDPRESS_DB_PASSWORD="$DB_PASSWORD"
 
-# Crear secretos también en wpcli para que el MU plugin SMTP funcione al enviar mails
-write_secret DB_PASSWORD "${SECRETS_DIR}/db_password"
-write_secret SMTP_USER "${SECRETS_DIR}/smtp_user"
-write_secret SMTP_PASS "${SECRETS_DIR}/smtp_pass"
-
 log "== Esperando a WordPress files =="
-until [ -f /var/www/html/wp-load.php ] || [ -f /var/www/html/wp-config-sample.php ]; do
+until [ -f /var/www/html/wp-includes/version.php ]; do
   sleep 2
 done
 
@@ -64,7 +67,8 @@ if [ ! -f /var/www/html/wp-config.php ]; then
     --dbuser="${WORDPRESS_DB_USER}" \
     --dbpass="${WORDPRESS_DB_PASSWORD}" \
     --dbhost="${WORDPRESS_DB_HOST}" \
-    --path=/var/www/html
+    --path=/var/www/html \
+    --skip-check
 fi
 
 log "== Ajustando wp-config.php =="

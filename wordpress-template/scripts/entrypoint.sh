@@ -2,7 +2,7 @@
 set -eu
 
 mkdir -p /run/secrets
-chmod 700 /run/secrets
+chmod 755 /run/secrets
 
 write_secret() {
   var_name="$1"
@@ -11,6 +11,7 @@ write_secret() {
   value="$(printenv "$var_name" 2>/dev/null || true)"
   if [ -n "$value" ]; then
     printf '%s' "$value" > "$file_path"
+    chown www-data:www-data "$file_path"
     chmod 600 "$file_path"
   fi
 }
@@ -19,7 +20,6 @@ write_secret DB_PASSWORD /run/secrets/db_password
 write_secret SMTP_USER /run/secrets/smtp_user
 write_secret SMTP_PASS /run/secrets/smtp_pass
 
-# Muy importante: hacer que la imagen oficial de WordPress use el fichero secreto
 export WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
 
 unset DB_PASSWORD
