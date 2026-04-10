@@ -86,7 +86,7 @@ if wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
 fi
 
 if [ "$WORDPRESS_ALREADY_INSTALLED" = "false" ]; then
-  TEMP_ADMIN_PASSWORD="$(php -r 'echo bin2hex(random_bytes(16));')"
+  TEMP_ADMIN_PASSWORD="${TEMP_ADMIN_PASSWORD}"
 
   log "== Instalando WordPress =="
   wp core install \
