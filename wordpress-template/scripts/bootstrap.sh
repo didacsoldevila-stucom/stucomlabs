@@ -6,7 +6,6 @@ log() {
 }
 
 SECRETS_DIR="/tmp/stucom-secrets"
-ELEMENTOR_PRO_ZIP_PATH="${ELEMENTOR_PRO_ZIP_PATH}"
 
 write_secret() {
   var_name="$1"
@@ -21,6 +20,8 @@ write_secret() {
 }
 
 DB_PASSWORD="${DB_PASSWORD:-}"
+TEMP_ADMIN_PASSWORD="${INITIAL_ADMIN_PASSWORD:-}"
+ELEMENTOR_PRO_ZIP_PATH="${ELEMENTOR_PRO_ZIP_PATH:-}"
 
 write_secret DB_PASSWORD "${SECRETS_DIR}/db_password"
 write_secret SMTP_USER "${SECRETS_DIR}/smtp_user"
@@ -36,6 +37,11 @@ fi
 
 if [ -z "$DB_PASSWORD" ]; then
   log "ERROR: No se ha proporcionado DB_PASSWORD"
+  exit 1
+fi
+
+if [ -z "$TEMP_ADMIN_PASSWORD" ]; then
+  log "ERROR: No se ha proporcionado INITIAL_ADMIN_PASSWORD"
   exit 1
 fi
 
@@ -86,7 +92,6 @@ if wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
 fi
 
 if [ "$WORDPRESS_ALREADY_INSTALLED" = "false" ]; then
-
   log "== Instalando WordPress =="
   wp core install \
     --url="https://${DOMAIN}" \
@@ -111,11 +116,11 @@ if [ "$WORDPRESS_ALREADY_INSTALLED" = "false" ]; then
   log "== Instalando Elementor free =="
   wp plugin install elementor --activate --path=/var/www/html
 
-  if [ -f "${ELEMENTOR_PRO_ZIP_PATH}" ]; then
+  if [ -n "$ELEMENTOR_PRO_ZIP_PATH" ] && [ -f "$ELEMENTOR_PRO_ZIP_PATH" ]; then
     log "== Instalando Elementor Pro desde ZIP local =="
-    wp plugin install "${ELEMENTOR_PRO_ZIP_PATH}" --activate --path=/var/www/html
+    wp plugin install "$ELEMENTOR_PRO_ZIP_PATH" --activate --path=/var/www/html
   elif [ -n "${ELEMENTOR_PRO_URL:-}" ]; then
-    log "== ZIP local no encontrado, instalando Elementor Pro desde URL =="
+    log "== Instalando Elementor Pro desde URL =="
     wp plugin install "${ELEMENTOR_PRO_URL}" --activate --path=/var/www/html
   else
     log "== No se ha proporcionado ZIP local ni ELEMENTOR_PRO_URL, se omite Elementor Pro =="
@@ -131,8 +136,6 @@ wp user update "${STUDENT_CODE}" \
   --role=administrator \
   --path=/var/www/html
 
-# En el despliegue inicial NO enviamos reset automáticamente.
-# Solo lo enviamos cuando PASSWORD_RESET_TRIGGER tenga valor y cambie.
 PASSWORD_RESET_TRIGGER="${PASSWORD_RESET_TRIGGER:-}"
 
 if [ -n "$PASSWORD_RESET_TRIGGER" ]; then
