@@ -6,7 +6,7 @@ log() {
 }
 
 SECRETS_DIR="/tmp/stucom-secrets"
-ELEMENTOR_PRO_ZIP_PATH="${ELEMENTOR_PRO_ZIP_PATH:-/root/deploy/elementor-pro-4.0.1.zip}"
+ELEMENTOR_PRO_ZIP_PATH="${ELEMENTOR_PRO_ZIP_PATH}"
 
 write_secret() {
   var_name="$1"
@@ -86,7 +86,6 @@ if wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
 fi
 
 if [ "$WORDPRESS_ALREADY_INSTALLED" = "false" ]; then
-  TEMP_ADMIN_PASSWORD="${TEMP_ADMIN_PASSWORD}"
 
   log "== Instalando WordPress =="
   wp core install \
