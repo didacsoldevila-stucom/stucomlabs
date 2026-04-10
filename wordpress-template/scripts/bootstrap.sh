@@ -6,6 +6,7 @@ log() {
 }
 
 SECRETS_DIR="/tmp/stucom-secrets"
+ELEMENTOR_PRO_ZIP_PATH="${ELEMENTOR_PRO_ZIP_PATH:-/root/deploy/elementor-pro-4.0.1.zip}"
 
 write_secret() {
   var_name="$1"
@@ -76,50 +77,52 @@ wp config set FS_METHOD direct --type=constant --path=/var/www/html || true
 wp config set FORCE_SSL_ADMIN true --raw --type=constant --path=/var/www/html || true
 wp config set DISALLOW_FILE_EDIT true --raw --type=constant --path=/var/www/html || true
 
+WORDPRESS_ALREADY_INSTALLED="false"
+
 log "== Comprobando si WordPress ya está instalado =="
 if wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
-  log "WordPress ya está instalado. Saliendo."
-  exit 0
+  WORDPRESS_ALREADY_INSTALLED="true"
+  log "WordPress ya está instalado."
 fi
 
-TEMP_ADMIN_PASSWORD="$(php -r 'echo bin2hex(random_bytes(16));')"
+if [ "$WORDPRESS_ALREADY_INSTALLED" = "false" ]; then
+  TEMP_ADMIN_PASSWORD="$(php -r 'echo bin2hex(random_bytes(16));')"
 
-log "== Instalando WordPress =="
-wp core install \
-  --url="https://${DOMAIN}" \
-  --title="${WP_TITLE}" \
-  --admin_user="${STUDENT_CODE}" \
-  --admin_password="${TEMP_ADMIN_PASSWORD}" \
-  --admin_email="${STUDENT_EMAIL}" \
-  --skip-email \
-  --locale=ca \
-  --path=/var/www/html
+  log "== Instalando WordPress =="
+  wp core install \
+    --url="https://${DOMAIN}" \
+    --title="${WP_TITLE}" \
+    --admin_user="${STUDENT_CODE}" \
+    --admin_password="${TEMP_ADMIN_PASSWORD}" \
+    --admin_email="${STUDENT_EMAIL}" \
+    --skip-email \
+    --locale=ca \
+    --path=/var/www/html
 
-log "== Instalando y activando idioma catalán =="
-wp core language install ca --activate --path=/var/www/html || true
-wp site switch-language ca --path=/var/www/html || true
+  log "== Instalando y activando idioma catalán =="
+  wp core language install ca --activate --path=/var/www/html || true
+  wp site switch-language ca --path=/var/www/html || true
 
-log "== Ajustando indexación =="
-wp option update blog_public 0 --path=/var/www/html
+  log "== Ajustando indexación =="
+  wp option update blog_public 0 --path=/var/www/html
 
-log "== Configurando timezone =="
-wp option update timezone_string "Europe/Madrid" --path=/var/www/html
+  log "== Configurando timezone =="
+  wp option update timezone_string "Europe/Madrid" --path=/var/www/html
 
-log "== Instalando Elementor free =="
-wp plugin install elementor --activate --path=/var/www/html
+  log "== Instalando Elementor free =="
+  wp plugin install elementor --activate --path=/var/www/html
 
-if [ -n "${ELEMENTOR_PRO_URL:-}" ]; then
-  log "== Instalando Elementor Pro desde URL =="
-  wp plugin install "${ELEMENTOR_PRO_URL}" --activate --path=/var/www/html
+  if [ -f "${ELEMENTOR_PRO_ZIP_PATH}" ]; then
+    log "== Instalando Elementor Pro desde ZIP local =="
+    wp plugin install "${ELEMENTOR_PRO_ZIP_PATH}" --activate --path=/var/www/html
+  elif [ -n "${ELEMENTOR_PRO_URL:-}" ]; then
+    log "== ZIP local no encontrado, instalando Elementor Pro desde URL =="
+    wp plugin install "${ELEMENTOR_PRO_URL}" --activate --path=/var/www/html
+  else
+    log "== No se ha proporcionado ZIP local ni ELEMENTOR_PRO_URL, se omite Elementor Pro =="
+  fi
 else
-  log "== No se ha proporcionado ELEMENTOR_PRO_URL, se omite Elementor Pro =="
-fi
-
-if [ -n "${ELEMENTOR_PRO_LICENSE:-}" ]; then
-  log "== Activando licencia de Elementor Pro =="
-  wp elementor-pro license activate "${ELEMENTOR_PRO_LICENSE}" --path=/var/www/html
-else
-  log "== No se ha proporcionado ELEMENTOR_PRO_LICENSE, se omite activación =="
+  log "== Saltando instalación inicial de WordPress y plugins =="
 fi
 
 log "== Ajustando nombre y apellidos del alumno =="
@@ -129,7 +132,24 @@ wp user update "${STUDENT_CODE}" \
   --role=administrator \
   --path=/var/www/html
 
-log "== Forzando reset de contraseña por email =="
-wp eval "retrieve_password('${STUDENT_CODE}');" --path=/var/www/html
+# En el despliegue inicial NO enviamos reset automáticamente.
+# Solo lo enviamos cuando PASSWORD_RESET_TRIGGER tenga valor y cambie.
+PASSWORD_RESET_TRIGGER="${PASSWORD_RESET_TRIGGER:-}"
+
+if [ -n "$PASSWORD_RESET_TRIGGER" ]; then
+  log "== Comprobando trigger de reset de contraseña =="
+
+  LAST_TRIGGER="$(wp option get stucom_password_reset_trigger --path=/var/www/html 2>/dev/null || true)"
+
+  if [ "$LAST_TRIGGER" != "$PASSWORD_RESET_TRIGGER" ]; then
+    log "== Enviando correo de reset de contraseña =="
+    wp eval "retrieve_password('${STUDENT_CODE}');" --path=/var/www/html
+    wp option update stucom_password_reset_trigger "$PASSWORD_RESET_TRIGGER" --path=/var/www/html
+  else
+    log "== Trigger de reset ya procesado, no se reenvía =="
+  fi
+else
+  log "== No se ha definido PASSWORD_RESET_TRIGGER, no se envía reset =="
+fi
 
 log "== Bootstrap completado =="

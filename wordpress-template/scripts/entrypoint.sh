@@ -35,6 +35,7 @@ if [ -f /usr/src/stucom/mu-plugins/smtp.php ]; then
 fi
 
 mkdir -p /var/www/html/wp-content/uploads
+chown www-data:www-data /var/www/html/wp-content/uploads
 
 cat <<EOF > /var/www/html/wp-content/uploads/.htaccess
 <FilesMatch "\.php$">
